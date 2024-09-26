@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countries</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <style>
+        h1 {
+            text-align: center;
+        }
+        
+        body {
+            background-color: rgb(90, 245, 245);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .filters {
+            position: absolute;
+            left: 0;
+            top: 10%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .filters select, .filters input {
+            margin-bottom: 10px;
+            /* Make dropdowns fit the text */
+            width: auto; 
+            min-width: 150px;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .center {
+            margin-top: 10%;
+        }
+
+        /* Container to position filters and country info side by side */
+        .main-content {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* Position the country info on the right of the filters */
+        .country-info-container {
+            margin-left: 15px; /* Space between filters and country info */
+        }
+
+        /* Styling for the country info container */
+        #country-info {
+            text-align: center;
+        }
+
+        /* Additional spacing for the country details */
+        #country-info p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    
+    <h1>Countries</h1>
+
+    <!-- Main content container for filters and country info -->
+    <div class="main-content">
+        <!-- Filters positioned on the left side -->
+        <div class="filters">
+            <select id="continent-filter" class="form-control">
+                <option value="">Select Continent</option>
+                <option value="Africa">Africa</option>
+                <option value="America">America</option>
+                <option value="Asia">Asia</option>
+                <option value="Europe">Europe</option>
+                <option value="Oceania">Oceania</option>
+            </select>
+            <input type="text" id="letter-filter" class="form-control" placeholder="First letter of country">
+        </div>
+
+        <!-- Country info will appear here -->
+        <div class="country-info-container">
+            <div class="container">
+                <div class="center">
+                    <button type="button" class="btn btn-warning" id="generate-button">Generate a new Country</button>
+                </div>
+            </div>
+            <div id="country-info"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generate-button').addEventListener('click', function() {
+            const continent = document.getElementById('continent-filter').value;
+            const letter = document.getElementById('letter-filter').value.toUpperCase();
+            const apiUrl = 'https://restcountries.com/v3.1/all';
+            
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    // Filter countries based on continent and first letter
+                    const filteredCountries = data.filter(country => {
+                        return (!continent || country.region === continent) &&
+                               (!letter || country.name.common.startsWith(letter));
+                    });
+
+                    if (filteredCountries.length > 0) {
+                        // Pick a random country from the filtered list
+                        const randomIndex = Math.floor(Math.random() * filteredCountries.length);
+                        const country = filteredCountries[randomIndex];
+
+                        // Display country information
+                        const countryInfoDiv = document.getElementById('country-info');
+                        countryInfoDiv.innerHTML = `
+                            <h2>${country.name.common}</h2>
+                            <p><strong>Capital:</strong> ${country.capital ? country.capital[0] : 'N/A'}</p>
+                            <p><strong>Population:</strong> ${country.population.toLocaleString()}</p>
+                            <p><strong>Region:</strong> ${country.region}</p>
+                            <p><strong>Subregion:</strong> ${country.subregion}</p>
+                            <p><strong>Languages:</strong> ${Object.values(country.languages || {}).join(', ')}</p>
+                            <img src="${country.flags.svg}" alt="Flag of ${country.name.common}" width="200">
+                        `;
+                    } else {
+                        // No countries match the filter criteria
+                        const countryInfoDiv = document.getElementById('country-info');
+                        countryInfoDiv.innerHTML = '<p>No countries match the filter criteria.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching country data:', error);
+                });
+        });
+    </script>
+    
+</body>
+</html>
